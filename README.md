@@ -55,7 +55,7 @@ DATASET/
        ├── image2.jpg
        └── ...
 ```
-### 4. 
+### 4. Run 
 ```bash
 python train_ml_model.py
 ```
