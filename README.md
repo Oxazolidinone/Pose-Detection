@@ -32,8 +32,8 @@ AI-powered pose classification system using MoveNet and LightGBM to detect and c
 
 ### 1. Clone repository
 ```bash
-git clone <repository-url>
-cd Pose-Yolo
+git clone https://github.com/Oxazolidinone/Pose-Detection.git
+cd Pose-Detection
 ```
 
 ### 2. Install dependencies
