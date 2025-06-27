@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercise Form Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin-top: 30px;
+            margin-bottom: 30px;
+            padding: 40px;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .result-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .form-correct {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .form-incorrect {
+            background: linear-gradient(45deg, #dc3545, #fd7e14);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .error-badge {
+            background: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin: 2px;
+            display: inline-block;
+            font-size: 0.8em;
+        }
+        .correction-badge {
+            background: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin: 2px;
+            display: inline-block;
+            font-size: 0.8em;
+        }
+        .exercise-selector {
+            margin: 20px 0;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .nav-pills .nav-link.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+        #webcam-video {
+            max-width: 100%;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold">
+                <i class="fas fa-dumbbell text-primary"></i>
+                Exercise Form Checker
+            </h1>
+            <p class="lead">Check if your exercise form is correct or incorrect with AI-powered analysis</p>
+        </div>
+
+        <!-- Exercise Type Selection -->
+        <div class="exercise-selector">
+            <label class="form-label"><strong>Select Exercise Type:</strong></label>
+            <select class="form-select" id="exerciseType">
+                <option value="auto">Auto Detect</option>
+                <option value="plank">Plank</option>
+                <option value="squat">Squat</option>
+                <option value="push_up">Push Up</option>
+                <option value="lunge">Lunge</option>
+                <option value="bicep_curl">Bicep Curl</option>
+            </select>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-pills nav-fill mb-4" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="image-tab" data-bs-toggle="pill" data-bs-target="#image" type="button">
+                    <i class="fas fa-image"></i> Upload Image
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="video-tab" data-bs-toggle="pill" data-bs-target="#video" type="button">
+                    <i class="fas fa-video"></i> Upload Video
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="webcam-tab" data-bs-toggle="pill" data-bs-target="#webcam" type="button">
+                    <i class="fas fa-camera"></i> Live Camera
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="myTabContent">
+            <!-- Image Upload Tab -->
+            <div class="tab-pane fade show active" id="image" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-upload"></i> Upload Image for Analysis</h5>
+                        <form id="imageForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <input type="file" class="form-control" id="imageFile" accept="image/*" required>
+                                <div class="form-text">Supported formats: JPG, PNG, GIF</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Analyze Form
+                            </button>
+                        </form>
+                        <div class="loading" id="imageLoading">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p>Analyzing your form...</p>
+                        </div>
+                        <div id="imageResult"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Upload Tab -->
+            <div class="tab-pane fade" id="video" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-film"></i> Upload Video for Analysis</h5>
+                        <form id="videoForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <input type="file" class="form-control" id="videoFile" accept="video/*" required>
+                                <div class="form-text">Supported formats: MP4, AVI, MOV</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Max Frames to Analyze:</label>
+                                <input type="number" class="form-control" id="maxFrames" value="20" min="5" max="50">
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-play"></i> Analyze Video
+                            </button>
+                        </form>
+                        <div class="loading" id="videoLoading">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p>Processing video...</p>
+                        </div>
+                        <div id="videoResult"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Webcam Tab -->
+            <div class="tab-pane fade" id="webcam" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-video"></i> Live Camera Analysis</h5>
+                        <div class="text-center mb-3">
+                            <video id="webcam-video" autoplay muted></video>
+                            <canvas id="webcam-canvas" style="display: none;"></canvas>
+                        </div>
+                        <div class="text-center">
+                            <button id="startWebcam" class="btn btn-success me-2">
+                                <i class="fas fa-play"></i> Start Camera
+                            </button>
+                            <button id="stopWebcam" class="btn btn-danger" disabled>
+                                <i class="fas fa-stop"></i> Stop Camera
+                            </button>
+                        </div>
+                        <div class="loading" id="webcamLoading">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p>Analyzing live feed...</p>
+                        </div>
+                        <div id="webcamResult"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let webcamStream = null;
+        let webcamInterval = null;
+
+        // Image Form Handler
+        document.getElementById('imageForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('imageFile');
+            const exerciseType = document.getElementById('exerciseType').value;
+            
+            formData.append('file', fileInput.files[0]);
+            formData.append('exercise_type', exerciseType);
+            
+            document.getElementById('imageLoading').style.display = 'block';
+            document.getElementById('imageResult').innerHTML = '';
+            
+            try {
+                const response = await fetch('/analyze_image', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                document.getElementById('imageLoading').style.display = 'none';
+                displayImageResult(data);
+            } catch (error) {
+                document.getElementById('imageLoading').style.display = 'none';
+                document.getElementById('imageResult').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> Error: ${error.message}
+                    </div>
+                `;
+            }
+        });
+
+        // Video Form Handler
+        document.getElementById('videoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('videoFile');
+            const maxFrames = document.getElementById('maxFrames').value;
+            const exerciseType = document.getElementById('exerciseType').value;
+            
+            formData.append('file', fileInput.files[0]);
+            formData.append('max_frames', maxFrames);
+            formData.append('exercise_type', exerciseType);
+            
+            document.getElementById('videoLoading').style.display = 'block';
+            document.getElementById('videoResult').innerHTML = '';
+            
+            try {
+                const response = await fetch('/analyze_video', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                document.getElementById('videoLoading').style.display = 'none';
+                displayVideoResult(data);
+            } catch (error) {
+                document.getElementById('videoLoading').style.display = 'none';
+                document.getElementById('videoResult').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> Error: ${error.message}
+                    </div>
+                `;
+            }
+        });
+
+        // Webcam Handlers
+        document.getElementById('startWebcam').addEventListener('click', startWebcam);
+        document.getElementById('stopWebcam').addEventListener('click', stopWebcam);
+
+        async function startWebcam() {
+            try {
+                webcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('webcam-video').srcObject = webcamStream;
+                
+                document.getElementById('startWebcam').disabled = true;
+                document.getElementById('stopWebcam').disabled = false;
+                
+                // Analyze every 2 seconds
+                webcamInterval = setInterval(analyzeWebcamFrame, 2000);
+            } catch (error) {
+                alert('Cannot access camera: ' + error.message);
+            }
+        }
+
+        function stopWebcam() {
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+                webcamStream = null;
+            }
+            
+            if (webcamInterval) {
+                clearInterval(webcamInterval);
+                webcamInterval = null;
+            }
+            
+            document.getElementById('startWebcam').disabled = false;
+            document.getElementById('stopWebcam').disabled = true;
+            document.getElementById('webcamResult').innerHTML = '';
+        }
+
+        async function analyzeWebcamFrame() {
+            const video = document.getElementById('webcam-video');
+            const canvas = document.getElementById('webcam-canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0);
+            
+            const imageData = canvas.toDataURL('image/jpeg');
+            const exerciseType = document.getElementById('exerciseType').value;
+            
+            document.getElementById('webcamLoading').style.display = 'block';
+            
+            try {
+                const formData = new FormData();
+                formData.append('image_data', imageData);
+                formData.append('exercise_type', exerciseType);
+                
+                const response = await fetch('/analyze_webcam', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                document.getElementById('webcamLoading').style.display = 'none';
+                displayWebcamResult(data);
+            } catch (error) {
+                document.getElementById('webcamLoading').style.display = 'none';
+            }
+        }
+
+        function displayImageResult(data) {
+            const resultDiv = document.getElementById('imageResult');
+            
+            if (!data.success) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> ${data.error}
+                    </div>
+                `;
+                return;
+            }
+            
+            const formStatusClass = data.is_correct ? 'form-correct' : 'form-incorrect';
+            const formStatusIcon = data.is_correct ? 'fa-check-circle' : 'fa-times-circle';
+            const formStatusText = data.is_correct ? 'CORRECT FORM!' : 'INCORRECT FORM';
+            
+            const errorBadges = data.errors.map(error => 
+                `<span class="error-badge"><i class="fas fa-exclamation"></i> ${error}</span>`
+            ).join(' ');
+            
+            const correctionBadges = data.corrections.map(correction => 
+                `<span class="correction-badge"><i class="fas fa-lightbulb"></i> ${correction}</span>`
+            ).join(' ');
+            
+            resultDiv.innerHTML = `
+                <div class="mt-4">
+                    <div class="${formStatusClass}">
+                        <h4><i class="fas ${formStatusIcon}"></i> ${formStatusText}</h4>
+                        <p class="mb-0">${data.feedback}</p>
+                        <small>Confidence: ${(data.confidence * 100).toFixed(1)}% | Score: ${(data.form_score * 100).toFixed(1)}%</small>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h6>Original Image:</h6>
+                            <img src="${data.original_image}" class="result-image" alt="Original">
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Analysis Result:</h6>
+                            <img src="${data.result_image}" class="result-image" alt="Result">
+                        </div>
+                    </div>
+                    
+                    ${data.errors.length > 0 ? `
+                    <div class="mt-3">
+                        <h6><i class="fas fa-exclamation-triangle text-danger"></i> Issues Found:</h6>
+                        <div>${errorBadges}</div>
+                    </div>
+                    ` : ''}
+                    
+                    ${data.corrections.length > 0 ? `
+                    <div class="mt-3">
+                        <h6><i class="fas fa-lightbulb text-success"></i> Corrections:</h6>
+                        <div>${correctionBadges}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function displayVideoResult(data) {
+            const resultDiv = document.getElementById('videoResult');
+            
+            if (!data.success) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> ${data.error}
+                    </div>
+                `;
+                return;
+            }
+            
+            const summary = data.summary;
+            const accuracyClass = summary.accuracy_percentage >= 70 ? 'text-success' : 
+                                 summary.accuracy_percentage >= 50 ? 'text-warning' : 'text-danger';
+            
+            let summaryHtml = `
+                <div class="mt-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-chart-bar"></i> Video Analysis Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-3">
+                                    <h4 class="text-primary">${summary.total_frames_analyzed}</h4>
+                                    <small>Frames Analyzed</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <h4 class="text-success">${summary.correct_frames}</h4>
+                                    <small>Correct Frames</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <h4 class="${accuracyClass}">${summary.accuracy_percentage.toFixed(1)}%</h4>
+                                    <small>Accuracy</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <h4 class="text-info">${summary.video_duration.toFixed(1)}s</h4>
+                                    <small>Duration</small>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <p><strong>Overall Feedback:</strong> ${summary.overall_feedback}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6><i class="fas fa-film"></i> Frame by Frame Analysis:</h6>
+                        <div class="row">
+            `;
+            
+            // Show first 6 frames
+            data.results.slice(0, 6).forEach(frame => {
+                const statusIcon = frame.is_correct ? 'fa-check-circle text-success' : 'fa-times-circle text-danger';
+                summaryHtml += `
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <img src="${frame.frame_image}" class="card-img-top" alt="Frame ${frame.frame_number}">
+                            <div class="card-body p-2">
+                                <small>
+                                    <i class="fas ${statusIcon}"></i> Frame ${frame.frame_number} 
+                                    (${frame.timestamp.toFixed(1)}s)
+                                    <br>Score: ${(frame.form_score * 100).toFixed(0)}%
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            summaryHtml += `
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            resultDiv.innerHTML = summaryHtml;
+        }
+
+        function displayWebcamResult(data) {
+            const resultDiv = document.getElementById('webcamResult');
+            
+            if (!data.success) {
+                return;
+            }
+            
+            const formStatusClass = data.is_correct ? 'form-correct' : 'form-incorrect';
+            const formStatusIcon = data.is_correct ? 'fa-check-circle' : 'fa-times-circle';
+            const formStatusText = data.is_correct ? 'CORRECT FORM!' : 'INCORRECT FORM';
+            
+            resultDiv.innerHTML = `
+                <div class="mt-3">
+                    <div class="${formStatusClass}">
+                        <h5><i class="fas ${formStatusIcon}"></i> ${formStatusText}</h5>
+                        <p class="mb-0">${data.feedback}</p>
+                        <small>Score: ${(data.form_score * 100).toFixed(0)}%</small>
+                    </div>
+                    
+                    ${data.errors.length > 0 ? `
+                    <div class="mt-2">
+                        <small><strong>Issues:</strong> ${data.errors.join(', ')}</small>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
